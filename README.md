@@ -1,7 +1,7 @@
 # Backend Go Service Template
 
 ## Requirements
-- go version go1.22+ 
+- go version `go1.22+`
 
 **DO THIS FIRST:**  `go mod tidy` 
 
