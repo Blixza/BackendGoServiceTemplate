@@ -1,0 +1,2 @@
+# Backend Go Service Template
+
