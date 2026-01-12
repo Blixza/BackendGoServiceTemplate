@@ -6,4 +6,4 @@
 **DO THIS AFTER DOWNLOAD:**  `go mod tidy` 
 
 ## Usage
-- Run: `go run cmd/api/main.go —envpath .env`
+- Run: `go run cmd/api/main.go --envpath .env`
