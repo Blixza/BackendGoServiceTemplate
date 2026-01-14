@@ -2,10 +2,11 @@ package user_handler
 
 import (
 	user_service "backend-service-template/internal/service/user"
+	"database/sql"
 	"encoding/json"
 	"net/http"
-	"strconv"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -20,8 +21,12 @@ func NewHandler(svc *user_service.Service, logger *zap.Logger) *Handler {
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
+		Nickname string `json:"nickname"`
+		Password string `json:"password"`
+		Discord  string `json:"discord"`
+		Email    string `json:"email"`
+		Balance  int    `json:"balance"`
+		Towns    sql.NullString `json:"towns"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -31,29 +36,33 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.svc.Register(r.Context(), req.Name, req.Email)
+	user, err := h.svc.Register(
+		r.Context(), req.Nickname, req.Password, req.Discord, req.Email,
+		req.Balance, req.Towns,
+	)
 	if err != nil {
 		h.logger.Error("failed to create user", zap.Error(err))
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	h.logger.Info("user created", zap.Int("user_id", user.ID))
+	h.logger.Info("user created", zap.Any("user_id", user.ID))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		h.logger.Error("failed to get user", zap.Error(err))
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.svc.Get(r.Context(), id)
+	user, err := h.svc.GetByID(r.Context(), id)
 	if err != nil {
-		h.logger.Error("user not found", zap.Int("id", id), zap.Error(err))
+		h.logger.Error("user not found", zap.Any("id", id), zap.Error(err))
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}

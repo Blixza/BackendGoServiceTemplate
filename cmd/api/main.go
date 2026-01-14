@@ -2,8 +2,11 @@ package main
 
 import (
 	"backend-service-template/config"
+	town_domain "backend-service-template/internal/domain/town"
 	user_domain "backend-service-template/internal/domain/user"
+	town_handler "backend-service-template/internal/handler/town"
 	user_handler "backend-service-template/internal/handler/user"
+	town_service "backend-service-template/internal/service/town"
 	user_service "backend-service-template/internal/service/user"
 	"backend-service-template/pkg/database"
 	"backend-service-template/pkg/logger"
@@ -39,9 +42,14 @@ func main() {
 	userSvc := user_service.NewService(userRepo)
 	userHandler := user_handler.NewHandler(userSvc, log)
 
+	townRepo := town_domain.NewRepository(db)
+	townSvc := town_service.NewService(townRepo)
+	townHandler := town_handler.NewHandler(townSvc, log)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /users", userHandler.Create)
 	mux.HandleFunc("GET /users/{id}", userHandler.Get)
+	mux.HandleFunc("POST /towns", townHandler.Create)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.HttpPort),
